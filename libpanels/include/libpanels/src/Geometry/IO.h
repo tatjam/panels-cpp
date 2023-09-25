@@ -1,7 +1,7 @@
 /* DO NOT INCLUDE THIS FILE DIRECTLY */
 #include "../../Assert.h"
 
-template<typename S>
+template<typename S> requires std::is_floating_point_v<S>
 template<int Decimals>
 std::string Geometry<S>::to_coordinate_data() const
 {
@@ -27,11 +27,17 @@ std::string Geometry<S>::to_coordinate_data() const
 	// The decimals, the number itself (maximum digits + sign) and the dot
 	// Note that the string is NOT null terminated
 	std::array<char, Decimals + 5> worker_array;
+	bool first = true;
 	for(auto vec : points.colwise())
 	{
-		if(vec(0) >= MAX_AIRFOIL_OUTPUT_COORDINATE)
+		if(first)
+			first = false;
+		else
+			out += '\n';
+
+		if(vec(0) >= MAX_AIRFOIL_OUTPUT_COORD)
 			throw std::runtime_error("Airfoil x coordinate too big!");
-		if(vec(1) >= MAX_AIRFOIL_OUTPUT_COORDINATE)
+		if(vec(1) >= MAX_AIRFOIL_OUTPUT_COORD)
 			throw std::runtime_error("Airfoil y coordinate too big!");
 
 		size_t len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(), vec(0),
@@ -41,7 +47,6 @@ std::string Geometry<S>::to_coordinate_data() const
 		len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(), vec(1),
 								 std::chars_format::fixed, Decimals).ptr - &worker_array[0]);
 		out.append(worker_array.begin(), worker_array.begin() + len);
-		out += '\n';
 	}
 
 	return out;

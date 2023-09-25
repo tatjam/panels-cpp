@@ -30,4 +30,5 @@ ospm.exe
 *.vscode
 .idea
 *.idea/
+/workdir/
 

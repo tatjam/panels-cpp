@@ -21,7 +21,7 @@ namespace internal
 		if(m < 0 || m > 9 || p < 0 || p > 9 || tt1 < 0 || tt1 > 9 || tt2 < 0 || tt2 > 9)
 			throw std::runtime_error("NACA element was not a string of four numbers");
 
-		return NACAElems{S(m) / S(100.0), S(p) / S(10.0), S(tt1 * 10 + tt2) / S(10.0)};
+		return NACAElems<S>{S(m) / S(100.0), S(p) / S(10.0), S(tt1 * 10 + tt2) / S(100.0)};
 	}
 
 	// Takes tau from 0->1 and returns x from 0->1, appropiate for airfoil sampling
@@ -101,7 +101,7 @@ namespace internal
 	}
 }
 
-template<typename S>
+template<typename S> requires std::is_floating_point_v<S>
 Geometry<S> Geometry<S>::from_naca(int num_panels, S chord, const std::string& code)
 {
 	Geometry<S> out;

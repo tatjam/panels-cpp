@@ -1,5 +1,7 @@
 #pragma once
 #include "../../Eigen/Eigen"
+
+#include "Utils.h"
 #include <string>
 #include <array>
 #include <charconv>
@@ -9,9 +11,10 @@ namespace libpanels
 	using namespace Eigen;
 
 	/**
-	 *
+	 * Geometry of a single, "closed" element in the simulation, typically an airfoil.
+	 * Includes tools for generating geometry, similar to XFoil's GDES toolbench.
 	 */
-	template<typename S>
+	template<typename S> requires std::is_floating_point_v<S>
 	class Geometry
 	{
 	private:
@@ -20,17 +23,20 @@ namespace libpanels
 		PointList points;
 
 	public:
-		// Only limited for output purposes
-		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 4;
-		static constexpr S MAX_AIRFOIL_OUTPUT_COORDINATE = std::pow(10, MAX_AIRFOIL_OUTPUT_DIGITS);
+		// Only limited for output purposes.
+		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 5;
+		static constexpr S MAX_AIRFOIL_OUTPUT_COORD = ipow(10, MAX_AIRFOIL_OUTPUT_DIGITS);
 
+		/**
+		 * Name of the airfoil, for display and output purposes.
+		 */
 		std::string name;
 
 		/**
 		 * Generates geometry from a NACA 4 digit code, using cosine sampling.
 		 * Decimals, and extra properties are NOT supported.
-		 * Note that the trailing edge panel is included in the count!
-		 * @param num_panels Total number of panels to use.
+		 * Note that the trailing edge panel is NOT included in the count!
+		 * @param num_panels Number of panels to use, excluding trailing edge panel.
 		 * @param chord Length of the airfoil
 		 * @param code The 4 digit code, in string form
 		 * @return
@@ -49,13 +55,14 @@ namespace libpanels
 		 * @return
 		 */
 		template<int Decimals=4>
-		std::string to_coordinate_data() const;
+		[[nodiscard]] std::string to_coordinate_data() const;
 
 		/**
 		 * Generates DXF data from the geometry.
 		 * @return
 		 */
 		std::string to_dxf_data() const;
+
 	};
 
 
