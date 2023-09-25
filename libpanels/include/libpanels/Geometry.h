@@ -1,5 +1,8 @@
 #pragma once
 #include "../../Eigen/Eigen"
+#include <string>
+#include <array>
+#include <charconv>
 
 namespace libpanels
 {
@@ -12,9 +15,16 @@ namespace libpanels
 	class Geometry
 	{
 	private:
-		Matrix<S, Dynamic, 2> points;
+		// TODO: Maybe using Dynamic, 2 is better for performance (or RowMajor, easier...)
+		using PointList = Array<S, 2, Dynamic, ColMajor>;
+		PointList points;
 
 	public:
+		// Only limited for output purposes
+		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 4;
+		static constexpr S MAX_AIRFOIL_OUTPUT_COORDINATE = std::pow(10, MAX_AIRFOIL_OUTPUT_DIGITS);
+
+		std::string name;
 
 		/**
 		 * Generates geometry from a NACA 4 digit code, using cosine sampling.
@@ -38,14 +48,16 @@ namespace libpanels
 		 * otherwise, labelled plain coordinates are output.
 		 * @return
 		 */
-		const std::string& to_coordinate_data();
+		template<int Decimals=4>
+		std::string to_coordinate_data() const;
 
 		/**
 		 * Generates DXF data from the geometry.
 		 * @return
 		 */
-		const std::string& to_dxf_data();
+		std::string to_dxf_data() const;
 	};
+
 
 #include "src/Geometry/NACA.h"
 #include "src/Geometry/IO.h"
