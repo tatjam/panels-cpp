@@ -7,9 +7,7 @@
 	public: \
 		BuildSolver<name>& finish_parameters() \
 		{                                               \
-			BuildSolver<name>& to_ret = internal_ret_solver; \
-            delete this;                                      \
-			return to_ret; \
+			return internal_ret_solver; \
 		} \
 		BuildParameters(BuildSolver<name>& ret, name& solv) : internal_ret_solver(ret), solver(solv) \
 		{} \
@@ -22,10 +20,9 @@
 		name& solver; \
 	public: \
 		BuildSolver<name>& finish_geometry() \
-		{ \
-			BuildSolver<name>& to_ret = internal_ret_solver; \
-            delete this;                                      \
-			return to_ret; \
+		{                               \
+            on_finish_geometry(geom);   \
+			return internal_ret_solver; \
 		} \
 		BuildGeometry(Geometry<S> g, BuildSolver<name>& ret, name& solv) : geom(g), internal_ret_solver(ret), solver(solv) \
 		{} \

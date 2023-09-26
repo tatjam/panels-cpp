@@ -17,12 +17,11 @@ namespace libpanels
 	template<typename S> requires std::is_floating_point_v<S>
 	class Geometry
 	{
-	private:
-		// TODO: Maybe using Dynamic, 2 is better for performance (or RowMajor, easier...)
+	public:
+		// TODO: Maybe using Dynamic, 2 is better for performance (or RowMajor, less code change...)
 		using PointList = Array<S, 2, Dynamic, ColMajor>;
 		PointList points;
 
-	public:
 		// Only limited for output purposes.
 		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 5;
 		static constexpr S MAX_AIRFOIL_OUTPUT_COORD = ipow(10, MAX_AIRFOIL_OUTPUT_DIGITS);

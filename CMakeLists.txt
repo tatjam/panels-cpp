@@ -7,3 +7,5 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE src/Main.cpp)
 
 include_directories(libpanels/include)
+
+add_subdirectory(libpanels/doc/)

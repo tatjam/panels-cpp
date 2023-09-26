@@ -1,30 +1,30 @@
 /*! \page geom_formats Geometry formats
     \tableofcontents
 
-    \section Xfoil-like files
+    \section xfoil-like Xfoil-like files
     We support all of the formats supported in Xfoil, due to their simplicity and widespread use.
     All formats are similar, and told apart by their first and second lines.
     For enumerating coordinates, commas may be used instead of spaces (CSV files)
 
-    \subsection Plain coordinates (import / export)
+    \subsection plain Plain coordinates (import / export)
         If the file starts with a number, it's assumed to be this format.
         Each coordinate occupies a line, and is laid out in pairs, x and y separated by an space or a comma.
 
-    \subsection Labeled plain coordinates (import / export)
+    \subsection labeled Labeled plain coordinates (import / export)
         Same as before, but the first line contains a string that DOESN'T start with a number.
         The string is interpreted as the geometry name.
         For backwards compatibility, an underscore
         is included before names that begin with a T or a F. For example, an airfoil named Test will be
         stored as _Test.
 
-    \subsection ISES coordinates (import only)
+    \subsection ises ISES coordinates (import only)
         Same as before, but the first line after the name contains four numbers.
         These four numbers are ignored.
 
-    \subsection MSES coordinates (import only)
+    \subsection mses MSES coordinates (import only)
         Same as ISES, but elements are separated by 999.0 999.0. We ignore all elements except the first.
 
-    \section DXF (import / export)
+    \section dxf DXF (import / export)
     We include support for extremely simple, 2D DXF files, in order to achieve easy import / export from CAD software.
     DXF files are automatically detected if the file starts with a single number (a DXF tag).
 */
