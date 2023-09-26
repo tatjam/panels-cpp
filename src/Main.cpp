@@ -31,6 +31,18 @@ int main()
 		out << solver.write_matrix();
 	}
 
-	solver.solve(Vector2<double>(100.0, 0.0));
+	std::string rhs, sln;
+	solver.solve(Vector2<double>(100.0, 0.0), &rhs, &sln);
+
+	{
+		std::ofstream out("rhs.dat");
+		out << rhs;
+	}
+
+	{
+		std::ofstream out("sln.dat");
+		out << sln;
+	}
+
 
 }

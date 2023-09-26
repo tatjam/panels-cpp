@@ -3,7 +3,7 @@
 
 
 template<typename S>
-void InviscidSolver<S>::solve(Vector2<S> freestream)
+void InviscidSolver<S>::solve(Vector2<S> freestream, std::string* out_rhs, std::string* out_sln)
 {
 	size_t size = get_total_panels();
 	if(!computed)
@@ -25,9 +25,29 @@ void InviscidSolver<S>::solve(Vector2<S> freestream)
 	Vector2<S> pfs(freestream(1), -freestream(0));
 	VectorX<S> rhs(size);
 	size_t i = 0;
-	for(auto vec : rhs_vectors.colwise())
-		rhs(i) = vec.dot(pfs); i++;
+	for(const auto& vec : rhs_vectors.colwise())
+	{
+		rhs(i) = vec.dot(pfs);
+		i++;
+	}
 
-	dense_solver.solve(rhs);
+
+	// TODO: This is not particularly efficient
+	if(out_rhs)
+	{
+		std::stringstream s;
+		s << rhs;
+		(*out_rhs) = s.str();
+	}
+
+	VectorX<S> sln = dense_solver.solve(rhs);
+
+	// TODO: This is not particularly efficient
+	if(out_sln)
+	{
+		std::stringstream s;
+		s << sln;
+		(*out_sln) = s.str();
+	}
 
 }

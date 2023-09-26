@@ -59,9 +59,11 @@ namespace libpanels
 		 * After the first solve, subsequent solutions are considerably faster as the system matrix
 		 * has been worked into a more usable form.
 		 * @param freestream
+		 * @param out_rhs Optional pointer to a string, into which the right hand side is written (as new line separated numbers)
+		 * @param out_sln Optional pointer to a string, into which the solution is written (same as before)
 		 * @return
 		 */
-		void solve(Vector2<S> freestream);
+		void solve(Vector2<S> freestream, std::string* out_rhs = nullptr, std::string* out_sln = nullptr);
 
 		/**
 		 * Writes the matrix to a simple format (readable by Mathematica, among other software)
@@ -69,9 +71,6 @@ namespace libpanels
 		 * @return An string containing the matrix laid out, columns separated by spaces, rows by new lines.
 		 */
 		[[nodiscard]] std::string write_matrix() const;
-
-
-
 	};
 
 
