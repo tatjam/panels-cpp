@@ -117,6 +117,7 @@ void InviscidSolver<S>::build_matrix()
 	}
 
 	// If the trailing edge is closed, replace its equation with the averaged one
+	// TODO
 
 	// Finally, introduce the Kutta condition for each geometry
 	gpi = 0;
