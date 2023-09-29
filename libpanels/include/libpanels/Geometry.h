@@ -5,6 +5,7 @@
 #include <string>
 #include <array>
 #include <charconv>
+#include <cctype>
 
 namespace libpanels
 {
@@ -25,6 +26,7 @@ namespace libpanels
 		// Only limited for output purposes.
 		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 5;
 		static constexpr S MAX_AIRFOIL_OUTPUT_COORD = ipow(10, MAX_AIRFOIL_OUTPUT_DIGITS);
+
 
 		/**
 		 * Name of the airfoil, for display and output purposes.
@@ -61,6 +63,14 @@ namespace libpanels
 		 * @return
 		 */
 		std::string to_dxf_data() const;
+
+		/**
+		 * Returns true if the point is inside the geometry. We assume the trailing
+		 * edge is closed with a straight line.
+		 * @param point Point to check
+		 * @return Is point inside the geometry?
+		 */
+		bool is_inside(Vector2<S> point);
 
 	};
 

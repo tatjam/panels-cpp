@@ -1,5 +1,6 @@
 #pragma once
 #include "Solver.h"
+#include "InviscidSolution.h"
 #include <optional>
 #include <sstream>
 
@@ -8,17 +9,6 @@
 
 namespace libpanels
 {
-	namespace internal
-	{
-		template<typename S>
-		class InviscidGeometry
-		{
-		public:
-			Geometry<S> geom;
-			// Set to infinity to always close the trailing edge
-			S distance_for_closed_trailing_edge;
-		};
-	}
 
 	/** Implements the same inviscid method as Xfoil on inviscid mode. See the paper for details.
 	 */
@@ -26,11 +16,14 @@ namespace libpanels
 	class InviscidSolver : public Solver<S>
 	{
 		friend class BuildSolver<InviscidSolver>;
+		friend class InviscidSolution<S>;
 	public:
 		static constexpr S EPSILON_CLOSED_TRAILING_EDGE = 0.0001;
 		static constexpr S FRACTION_FOR_SPARSE_SOLVER = 0.3;
+
 	protected:
-		#include "src/InviscidSolver/Builders.h"
+		#include "libpanels/src/Inviscid/Solver/Builders.h"
+
 	private:
 		S disregard_smaller_than;
 		S fraction_for_sparse;
@@ -63,7 +56,7 @@ namespace libpanels
 		 * @param out_sln Optional pointer to a string, into which the solution is written (same as before)
 		 * @return
 		 */
-		void solve(Vector2<S> freestream, std::string* out_rhs = nullptr, std::string* out_sln = nullptr);
+		InviscidSolution<S> solve(Vector2<S> freestream, std::string* out_rhs = nullptr, std::string* out_sln = nullptr);
 
 		/**
 		 * Writes the matrix to a simple format (readable by Mathematica, among other software)
@@ -75,7 +68,7 @@ namespace libpanels
 
 
 
-#include "src/InviscidSolver/Build.h"
-#include "src/InviscidSolver/Solve.h"
-#include "src/InviscidSolver/IO.h"
+#include "libpanels/src/Inviscid/Solver/Build.h"
+#include "libpanels/src/Inviscid/Solver/Solve.h"
+#include "libpanels/src/Inviscid/Solver/IO.h"
 }

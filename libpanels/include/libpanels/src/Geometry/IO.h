@@ -51,3 +51,58 @@ std::string Geometry<S>::to_coordinate_data() const
 
 	return out;
 }
+
+template<typename S>
+requires std::is_floating_point_v<S>
+Geometry<S> Geometry<S>::from_data(const std::string &data)
+{
+	Geometry<S> out;
+	std::stringstream ss(data);
+
+	if(data.size() == 0) throw std::runtime_error("Data was empty");
+
+	if(!std::isdigit(data[0]))
+	{
+		std::string name_line;
+		std::getline(ss, name_line);
+		out.name = name_line;
+	}
+
+	std::string line;
+	// Extract each coordinate, unless we find 999.9 999.9, skipping any 4 number line
+	bool skipped_ises = false;
+
+	std::vector<std::pair<S, S>> points;
+	while(!std::getline(ss, line).eof())
+	{
+		if(!skipped_ises)
+		{
+			skipped_ises = true;
+			std::istringstream skip_ises(line);
+			S d1, d2, d3, d4;
+			if(skip_ises >> d1 >> d2 >> d3 >> d4)
+			{
+				// This line must be ignored
+				continue;
+			}
+		}
+
+		std::istringstream iss(line);
+		S x, y;
+		if(!(iss >> x >> y))
+		{
+			throw std::runtime_error("Badly formatted geometry file");
+		}
+
+		points.emplace_back(x, y);
+	}
+
+	out.points = PointList(2, points.size());
+	for(size_t i = 0; i < points.size(); i++)
+	{
+		out.points(0, i) = points[i].first;
+		out.points(1, i) = points[i].second;
+	}
+
+	return out;
+}

@@ -1,5 +1,7 @@
 /* DO NOT INCLUDE THIS FILE DIRECTLY */
 #include "../../Assert.h"
+#include "libpanels/Geometry.h"
+
 
 namespace internal
 {
@@ -129,3 +131,4 @@ Geometry<S> Geometry<S>::from_naca(int num_panels, S chord, const std::string& c
 
 	return out;
 }
+

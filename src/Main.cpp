@@ -2,20 +2,13 @@
 #include <libpanels/InviscidSolver.h>
 
 #include <iostream>
-#include <fstream>
+#include "Util.h"
 
 int main()
 {
 	using namespace libpanels;
 
-	auto geom = Geometry<double>::from_naca(10, 1.0, "2412");
-	auto text = geom.to_coordinate_data();
-
-	{
-		std::ofstream out("geom.dat");
-		out << text;
-	}
-
+	auto geom = Geometry<double>::from_data(read_file_to_string("naca0012"));
 	auto solver = BuildSolver<libpanels::InviscidSolver<double>>()
 			.begin_geometry(geom)
 				.set_distance_to_close_trailing_edge(0.5)
@@ -25,24 +18,15 @@ int main()
 				.finish_parameters()
 			.build();
 
-
-	{
-		std::ofstream out("matrix.dat");
-		out << solver.write_matrix();
-	}
-
+	write_string_to_file("matrix.dat", solver.write_matrix());
 	std::string rhs, sln;
-	solver.solve(Vector2<double>(100.0, 0.0), &rhs, &sln);
+	auto solved = solver.solve(Vector2<double>(100.0, 0.0), &rhs, &sln);
+	write_string_to_file("rhs.dat", rhs);
+	write_string_to_file("sln.dat", sln);
+	write_string_to_file("fields.dat", solved.write_flow_field(
+			AlignedBox2d(Vector2d(-1.0, -1.0), Vector2d(1.0, 1.0)),
+			Vector2d(10.0, 10.0)));
 
-	{
-		std::ofstream out("rhs.dat");
-		out << rhs;
-	}
-
-	{
-		std::ofstream out("sln.dat");
-		out << sln;
-	}
 
 
 }

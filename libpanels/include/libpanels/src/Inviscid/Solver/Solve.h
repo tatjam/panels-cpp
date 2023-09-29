@@ -3,8 +3,13 @@
 
 
 template<typename S>
-void InviscidSolver<S>::solve(Vector2<S> freestream, std::string* out_rhs, std::string* out_sln)
+InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string* out_rhs, std::string* out_sln)
 {
+	InviscidSolution<S> out;
+
+	// Copy the geometries to the solution
+	out.geoms = geoms;
+
 	size_t size = get_total_panels();
 	if(!computed)
 	{
@@ -40,14 +45,16 @@ void InviscidSolver<S>::solve(Vector2<S> freestream, std::string* out_rhs, std::
 		(*out_rhs) = s.str();
 	}
 
-	VectorX<S> sln = dense_solver.solve(rhs);
+	out.vortex_strengths = dense_solver.solve(rhs);
+	out.freestream = freestream;
 
 	// TODO: This is not particularly efficient
 	if(out_sln)
 	{
 		std::stringstream s;
-		s << sln;
+		s << out.vortex_strengths;
 		(*out_sln) = s.str();
 	}
 
+	return out;
 }

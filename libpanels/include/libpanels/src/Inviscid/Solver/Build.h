@@ -39,6 +39,7 @@ namespace internal
 			S logr1 = std::log(r1);
 			S logr2 = std::log(r2);
 
+
 			S psip = xhat1 * logr1 - xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
 			S psin = (xhat1 + xhat2) * psip + r22 * logr2 - r12 * logr1 + S(0.5) * yhat * (xhat12 - xhat22);
 			psin /= (xhat1 - xhat2);

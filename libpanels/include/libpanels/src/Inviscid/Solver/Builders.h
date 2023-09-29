@@ -1,5 +1,5 @@
 /* DO NOT INCLUDE THIS FILE DIRECTLY */
-#include "../BuilderBoilerplate.h"
+#include "libpanels/src/BuilderBoilerplate.h"
 
 class BuildGeometry
 {
