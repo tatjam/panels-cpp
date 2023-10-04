@@ -3,11 +3,11 @@ namespace internal
 {
 	// Influence of panel j0->j1 in node i
 	// We return a value to be added to the j0 vortex strength, and another for the j1 vortex strength
-	template<typename S, bool trailing = false>
+	template<typename S, bool TRAILING = false>
 	std::pair<S, S> inviscid_influence(Vector2<S> ivec, Vector2<S> j0vec, Vector2<S> j1vec, size_t i, size_t j0, size_t j1)
 	{
-		Vector2<S> j01vec = j1vec - j0vec;
-		S j01inorm = 1.0 / j01vec.norm();
+		Vector2<S> j01vec = j0vec - j1vec;
+		S j01inorm = S(1.0) / j01vec.norm();
 
 		// Obtain relative vectors
 		Vector2<S> r1vec = (ivec - j0vec);
@@ -47,14 +47,17 @@ namespace internal
 			theta2 = 0.0;
 		}
 
-		S psip = S(0.5) * xhat1 * logr1 - S(0.5) * xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
+		//S psip = S(0.5) * xhat1 * logr1 - S(0.5) * xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
 		// This equation is different than on the paper
-		S psin = (xhat1 + xhat2) * psip + S(0.5) * (r22 * logr2 - r12 * logr1 + xhat1 * xhat1 - xhat2 * xhat2);
+		//S psin = (xhat1 + xhat2) * psip + S(0.5) * (r22 * logr2 - r12 * logr1 + xhat1 * xhat1 - xhat2 * xhat2);
+		//psin /= (xhat1 - xhat2);
+		S psip = xhat1 * logr1 - xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
+		S psin = (xhat1 + xhat2) * psip + r22 * logr2 - r12 * logr1 + S(0.5) * (xhat1 * xhat1 - xhat2 * xhat2);
 		psin /= (xhat1 - xhat2);
-		psip *= EIGEN_PI * S(0.25);
-		psin *= EIGEN_PI * S(0.25);
+		psip /= EIGEN_PI * S(4.0);
+		psin /= EIGEN_PI * S(4.0);
 
-		if (trailing)
+		if constexpr (TRAILING)
 		{
 			return std::make_pair(psip, 0.0);
 		}

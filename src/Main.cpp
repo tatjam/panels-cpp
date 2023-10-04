@@ -21,7 +21,7 @@ int main()
 
 	write_string_to_file("matrix.dat", solver.write_matrix());
 	std::string rhs, sln;
-	auto solved = solver.solve(Vector2<double>(100.0, 0.0), &rhs, &sln);
+	auto solved = solver.solve(Vector2<double>(1.0, 0.0), &rhs, &sln);
 	write_string_to_file("rhs.dat", rhs);
 	write_string_to_file("sln.dat", sln);
 	write_string_to_file("naca0012cps_ours.dat", solved.write_cp());
