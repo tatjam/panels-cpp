@@ -205,6 +205,8 @@ InviscidSolver<S> InviscidSolver<S>::build() const
 	// Make a copy of the parameters and geometry
 	InviscidSolver<S> out = *this;
 
+	out.state = InviscidSolver<S>::NOT_COMPUTED;
+
 	// We now work to generate the matrix in out
 	out.build_matrix();
 	out.maybe_make_sparse();

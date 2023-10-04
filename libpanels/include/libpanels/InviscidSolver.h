@@ -28,16 +28,26 @@ namespace libpanels
 		S disregard_smaller_than;
 		S fraction_for_sparse;
 		std::vector<internal::InviscidGeometry<S>> geoms;
-		bool computed = false;
+
+		enum State
+		{
+			NOT_COMPUTED,
+			SOLVE_DIRECT,
+			LINEAR_SOLVE
+		};
+		State state;
+
 		bool use_sparse = false;
 		FullPivLU<Matrix<S, Dynamic, Dynamic>> dense_solver;
 		Matrix<S, 2, Dynamic> rhs_vectors;
 
-		// Note that this matrix gets cleared once computed = true
-		// (It's transferred to the solver)
+		// Note that this matrix gets cleared once solve or solve_direct is first called!
 		MatrixX<S> mat;
 		// Same as before if using sparse solver
 		SparseMatrix<S> smat;
+
+		// If using solve(), these store the solutions for alpha = 0 and alpha=90
+		VectorX<S> alpha0, alpha90;
 
 		size_t get_total_panels();
 		// Also builds the right hand vectors (panel normals)
@@ -49,14 +59,33 @@ namespace libpanels
 
 		InviscidSolver<S> build() const;
 		/**
-		 * After the first solve, subsequent solutions are considerably faster as the system matrix
-		 * has been worked into a more usable form.
+		 * Due to the linearity of the method used, once the system is solved for Alpha = 0 and Alpha = 90
+		 * further solutions are near instant. The first solve call will actually solve twice for these two angles of attack,
+		 * and then for your requested freestream velocity. The solver afterwards will work with the precomputed
+		 * solutions to give extremely fast solutions.
+		 *
+		 * If you are solving a single angle of attack, or only two, you may want to use solve_direct.
+		 *
+		 * Note that after solve or solve_direct is called, the other will result in a runtime error!
+		 *
 		 * @param freestream
 		 * @param out_rhs Optional pointer to a string, into which the right hand side is written (as new line separated numbers)
 		 * @param out_sln Optional pointer to a string, into which the solution is written (same as before)
 		 * @return
 		 */
-		InviscidSolution<S> solve(Vector2<S> freestream, std::string* out_rhs = nullptr, std::string* out_sln = nullptr);
+		InviscidSolution<S> solve(Vector2<S> freestream, std::string* out_sln = nullptr);
+
+		/**
+		 * Doesn't exploit the linearity of the method. Instead, the matrix is computed on the first solve. This means
+		 * that the first solution will take every so slightly less than solve, but further solutions will be slightly slower.
+		 *
+		 * TODO: Benchmark, maybe evaluating the two linear terms is actually slower than this!!
+		 * @param freestream
+		 * @param out_rhs
+		 * @param out_sln
+		 * @return
+		 */
+		InviscidSolution<S> solve_direct(Vector2<S> freestream, std::string* out_rhs = nullptr, std::string* out_sln = nullptr);
 
 		/**
 		 * Writes the matrix to a simple format (readable by Mathematica, among other software)
