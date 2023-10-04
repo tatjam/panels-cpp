@@ -12,6 +12,7 @@ int main()
 	auto solver = BuildSolver<libpanels::InviscidSolver<double>>()
 			.begin_geometry(geom)
 				.set_distance_to_close_trailing_edge(0.5)
+				.set_trailing_edge_vector(Vector2<double>(1.0, 0.0))
 				.finish_geometry()
 			.begin_parameters()
 				.disregard_smaller_than(0.2)
@@ -23,6 +24,7 @@ int main()
 	auto solved = solver.solve(Vector2<double>(100.0, 0.0), &rhs, &sln);
 	write_string_to_file("rhs.dat", rhs);
 	write_string_to_file("sln.dat", sln);
+	write_string_to_file("naca0012cps_ours.dat", solved.write_cp());
 	write_string_to_file("fields.dat", solved.write_flow_field(
 			AlignedBox2d(Vector2d(-1.0, -1.0), Vector2d(1.0, 1.0)),
 			Vector2d(10.0, 10.0)));

@@ -29,6 +29,18 @@ public:
 		return *this;
 	}
 
+	/**
+	 * By default, libpanels automatically calculates the trailing edge vector
+	 * with the bisector vector of the first and last panel. You can manually
+	 * specify the vector using this function.
+	 * @param vec Trailing edge panel. Flow will be parallel to this (Kutta condition)
+	 * @return
+	 */
+	BuildGeometry& set_trailing_edge_vector(const Vector2<S>& vec)
+	{
+		g.trailing_edge_vector = vec.normalized();
+		return *this;
+	}
 
 };
 

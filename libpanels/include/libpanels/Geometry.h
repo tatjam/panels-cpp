@@ -24,7 +24,7 @@ namespace libpanels
 		PointList points;
 
 		// Only limited for output purposes.
-		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 5;
+		static constexpr int MAX_AIRFOIL_OUTPUT_DIGITS = 4;
 		static constexpr S MAX_AIRFOIL_OUTPUT_COORD = ipow(10, MAX_AIRFOIL_OUTPUT_DIGITS);
 
 
@@ -32,6 +32,11 @@ namespace libpanels
 		 * Name of the airfoil, for display and output purposes.
 		 */
 		std::string name;
+
+		/** Outputs a name that's sane for reading by XFoil, due to
+		 * certain limitations on old Fortran
+		 */
+		std::string get_sane_name() const;
 
 		/**
 		 * Generates geometry from a NACA 4 digit code, using cosine sampling.
@@ -55,7 +60,7 @@ namespace libpanels
 		 * otherwise, labelled plain coordinates are output.
 		 * @return
 		 */
-		template<int Decimals=4>
+		template<int Decimals=8>
 		[[nodiscard]] std::string to_coordinate_data() const;
 
 		/**
@@ -73,6 +78,7 @@ namespace libpanels
 		bool is_inside(Vector2<S> point);
 
 	};
+
 
 
 #include "src/Geometry/NACA.h"

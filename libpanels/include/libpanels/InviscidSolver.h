@@ -30,7 +30,7 @@ namespace libpanels
 		std::vector<internal::InviscidGeometry<S>> geoms;
 		bool computed = false;
 		bool use_sparse = false;
-		PartialPivLU<Matrix<S, Dynamic, Dynamic>> dense_solver;
+		FullPivLU<Matrix<S, Dynamic, Dynamic>> dense_solver;
 		Matrix<S, 2, Dynamic> rhs_vectors;
 
 		// Note that this matrix gets cleared once computed = true

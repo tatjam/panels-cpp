@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 
 namespace libpanels
 {
@@ -9,8 +10,10 @@ namespace libpanels
 		{
 		public:
 			Geometry<S> geom;
+			std::optional<Vector2<S>> trailing_edge_vector;
 			// Set to infinity to always close the trailing edge
 			S distance_for_closed_trailing_edge;
+
 		};
 	}
 
@@ -25,23 +28,21 @@ namespace libpanels
 		std::vector<internal::InviscidGeometry<S>> geoms;
 
 		/**
-		 * Vortex strength at each node, in the same order as they appeared in the geometries
-		 * used to generate the solution.
-		 */
-		VectorX<S> vortex_strengths;
-
-		/**
 		 * Pressure coefficient at each node, in the same order as they appeared in the geometries
 		 * used to generate the solution.
 		 */
-		VectorX<S> cps;
-
+		ArrayX<S> cps;
 		Vector2<S> freestream;
 	public:
-		// Used as a template trick, possibly a better way to do this
-		static S scalar_type_id;
 
-
+		/**
+		 * Outputs a file in a format very similar to Xfoil's CPWR
+		 * (Although it allows multiple geometries, which are written inline,
+		 * and doesn't have aligned numbers)
+		 * @return
+		 */
+		template<int Decimals=8>
+		[[nodiscard]] std::string write_cp() const;
 
 		/**
 		 * Obtain velocity at a point. This includes the freestream velocity!
@@ -78,6 +79,7 @@ namespace libpanels
 				AlignedBox<S, 2> in_box, Vector2<S> dens, std::function<bool(Vector2<S>)> cond) const;
 
 	};
+
 
 #include "src/Inviscid/Solution/IO.h"
 #include "src/Inviscid/Solution/VelField.h"

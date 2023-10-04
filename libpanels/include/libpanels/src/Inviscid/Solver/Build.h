@@ -1,51 +1,68 @@
 /* DO NOT INCLUDE THIS FILE DIRECTLY */
 namespace internal
 {
-	// Influence of panel j0->j1 in node n
+	// Influence of panel j0->j1 in node i
 	// We return a value to be added to the j0 vortex strength, and another for the j1 vortex strength
-	template<typename S>
-	std::pair<S, S> inviscid_influence(Vector2<S> n, Vector2<S> j0, Vector2<S> j1, bool in_panel)
+	template<typename S, bool trailing = false>
+	std::pair<S, S> inviscid_influence(Vector2<S> ivec, Vector2<S> j0vec, Vector2<S> j1vec, size_t i, size_t j0, size_t j1)
 	{
-		// Procedure "translated" straight from Xfoil paper
-		if(in_panel)
+		Vector2<S> j01vec = j1vec - j0vec;
+		S j01inorm = 1.0 / j01vec.norm();
+
+		// Obtain relative vectors
+		Vector2<S> r1vec = (ivec - j0vec);
+		Vector2<S> r2vec = (ivec - j1vec);
+
+		// Projection of (j1 -> n) over the perpendicular of (j0->j1)
+		Vector2<S> perpj01(j01vec(1), -j01vec(0));
+		S yhat = perpj01.dot(r1vec) * j01inorm;
+		// Projection of (ji -> n) over (j0->j1)
+		S xhat1 = j01vec.dot(r1vec) * j01inorm;
+		S xhat2 = j01vec.dot(r2vec) * j01inorm;
+		S xhat12 = xhat1 * xhat1;
+		S xhat22 = xhat2 * xhat2;
+
+		// This was obtained from XFoil's source code, as the paper's not fully clear
+		// on exactly how theta is defined
+		S theta1 = std::atan2(xhat1, yhat);
+		S theta2 = std::atan2(xhat2, yhat);
+
+		S r12 = r1vec.squaredNorm();
+		S r22 = r2vec.squaredNorm();
+		S r1 = std::sqrt(r12);
+		S r2 = std::sqrt(r22);
+		S logr1 = std::log(r1);
+		S logr2 = std::log(r2);
+
+		// Correct singularities
+		if(i == j0)
 		{
-			// Singularity
-			return std::make_pair(0, 0);
+			logr1 = 0.0;
+			theta1 = 0.0;
+		}
+
+		if(i == j1)
+		{
+			logr2 = 0.0;
+			theta2 = 0.0;
+		}
+
+		S psip = S(0.5) * xhat1 * logr1 - S(0.5) * xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
+		// This equation is different than on the paper
+		S psin = (xhat1 + xhat2) * psip + S(0.5) * (r22 * logr2 - r12 * logr1 + xhat1 * xhat1 - xhat2 * xhat2);
+		psin /= (xhat1 - xhat2);
+		psip *= EIGEN_PI * S(0.25);
+		psin *= EIGEN_PI * S(0.25);
+
+		if (trailing)
+		{
+			return std::make_pair(psip, 0.0);
 		}
 		else
 		{
-			// Obtain relative vectors, and their angles
-			Vector2<S> r1vec = n - j0;
-			Vector2<S> r2vec = n - j1;
-			// NOTE: theta is respect to the vertical! That's why arguments are flipped
-			S theta1 = std::atan2(r1vec(0), r1vec(1));
-			S theta2 = std::atan2(r2vec(0), r2vec(1));
-
-			Vector2<S> j01 = j1 - j0;
-			// The perpendicular distance is simple distance of point to line
-			S yhat = std::abs((j1(0) - j0(0)) * (j0(1) - n(1)) - (j0(0) - n(0)) * (j1(1) - j0(1))) / (j1 - j0).norm();
-			// The parallel distance from j1 and j0 to n is easily obtained, as it's the projection
-			// of (ji - n) over (j0->j1)
-			// The minus is due to the sign convention in the mathematics developed in the paper
-			S xhat1 = -j01.dot(r1vec);
-			S xhat2 = -j01.dot(r2vec);
-			S xhat12 = xhat1 * xhat1;
-			S xhat22 = xhat2 * xhat2;
-
-			S r12 = r1vec.squaredNorm();
-			S r22 = r2vec.squaredNorm();
-			S r1 = std::sqrt(r12);
-			S r2 = std::sqrt(r22);
-			S logr1 = std::log(r1);
-			S logr2 = std::log(r2);
-
-
-			S psip = xhat1 * logr1 - xhat2 * logr2 + xhat2 - xhat1 + yhat * (theta1 - theta2);
-			S psin = (xhat1 + xhat2) * psip + r22 * logr2 - r12 * logr1 + S(0.5) * yhat * (xhat12 - xhat22);
-			psin /= (xhat1 - xhat2);
-
 			return std::make_pair(psip - psin, psip + psin);
 		}
+
 	}
 }
 
@@ -58,8 +75,6 @@ size_t InviscidSolver<S>::get_total_panels()
 		// Each point gives a panel
 		tot += g.geom.points.cols();
 	}
-	// Kutta condition / averaging equation
-	tot += 1;
 	return tot;
 }
 
@@ -68,7 +83,8 @@ template<typename S>
 void InviscidSolver<S>::build_matrix()
 {
 	size_t size = get_total_panels();
-	mat = MatrixX<S>::Zero(size, size);
+	// The extra row is the kutta condition, the extra column the stremfunction
+	mat = MatrixX<S>::Zero(size + 1, size + 1);
 	rhs_vectors = Matrix<S, 2, Dynamic>(2, size);
 
 	size_t gpi = 0, gpj = 0;
@@ -84,31 +100,16 @@ void InviscidSolver<S>::build_matrix()
 		{
 			for (const auto &gj: geoms)
 			{
-				// ... from all panels (including trailing edge, albeit it may be removed later!)
-				for (size_t j = 0; j < gj.geom.points.cols(); j++)
+				// ... from all panels (not including trailing edge!)
+				for (size_t j = 0; j < gj.geom.points.cols() - 1; j++)
 				{
 					Vector2<S> in = gi.geom.points.col(i);
 					Vector2<S> j0 = gj.geom.points.col(j);
 					Vector2<S> j1;
-					bool in_panel = gpi == gpj && // must be in same geometry
-							(i == j || i == j + 1 || i + 1 == j || // normal panels
-							(i==0 && j == gj.geom.points.cols() - 1) || // trailing edge panels
-							(i == gj.geom.points.cols() - 1 && j == 0)); // ..
-					// Careful! The trailing edge is assumed to close up
-					if(j == gj.geom.points.cols() - 1)
-					{
-						j1 = gj.geom.points.col(0);
-						auto infl = internal::inviscid_influence(in, j0, j1, in_panel);
-						mat(gpi + i, gpj + j) += infl.first;
-						mat(gpi + i, gpj + j + 1) += infl.second;
-					}
-					else
-					{
-						j1 = gj.geom.points.col(j + 1);
-						auto infl = internal::inviscid_influence(in, j0, j1, in_panel);
-						mat(gpi + i, gpj + j) += infl.first;
-						mat(gpi + i, gpj + 0) += infl.second;
-					}
+					j1 = gj.geom.points.col(j + 1);
+					auto infl = internal::inviscid_influence(in, j0, j1, i, j, j + 1);
+					mat(gpi + i, gpj + j) += infl.first;
+					mat(gpi + i, gpj + j + 1) += infl.second;
 				}
 				gpj += gj.geom.points.cols();
 			}
@@ -117,15 +118,58 @@ void InviscidSolver<S>::build_matrix()
 		gpi += gi.geom.points.cols();
 	}
 
-	// If the trailing edge is closed, replace its equation with the averaged one
-	// TODO
+
+	gpi = 0; gpj = 0;
+	// Trailing edge panel for each geometry
+	for(const auto& gi : geoms)
+	{
+		for(size_t i = 0; i < gi.geom.points.cols(); i++)
+		{
+			for(const auto& gj : geoms)
+			{
+				Vector2<S> in = gi.geom.points.col(i);
+				Vector2<S> j0 = gj.geom.points.col(gj.geom.points.cols() - 1);
+				Vector2<S> j1 = gj.geom.points.col(0);
+				auto infl = internal::inviscid_influence<S, true>(in, j0, j1, i, gj.geom.points.cols() - 1, 0).first;
+
+				Vector2<S> tvec = (j1 - j0).normalized();
+				Vector2<S> svec;
+				if(gj.trailing_edge_vector.has_value())
+				{
+					svec = gj.trailing_edge_vector.value();
+				}
+				else
+				{
+					// Calculate it with the trailing panels bisector
+					//Vector2<S> svec =
+
+				}
+
+				S cross = std::abs(svec(0) * tvec(1) - svec(1) * tvec(0));
+				infl *= cross;
+
+				mat(gpi + i, gpj + 0) += infl;
+				mat(gpi + i, gpj + gj.geom.points.cols() - 1) += infl;
+
+				gpj += gj.geom.points.cols();
+			}
+			gpj = 0;
+		}
+		gpi += gi.geom.points.cols();
+	}
+
+	// Introduce the streamfunction
+	for(size_t i = 0; i < size; i++)
+	{
+		mat(i, size) = -1;
+	}
 
 	// Finally, introduce the Kutta condition for each geometry
 	gpi = 0;
 	for(const auto& gi : geoms)
 	{
 		mat(gpi + gi.geom.points.cols(), 0) = 1;
-		mat(gpi + gi.geom.points.cols(), gi.geom.points.cols()) = 1;
+		mat(gpi + gi.geom.points.cols(), gi.geom.points.cols() - 1) = 1;
 		gpi += gi.geom.points.cols();
 	}
 
@@ -141,8 +185,6 @@ void InviscidSolver<S>::build_matrix()
 			i++;
 		}
 	}
-	rhs_vectors(0, size - 1) = 0;
-	rhs_vectors(1, size - 1) = 0;
 
 }
 

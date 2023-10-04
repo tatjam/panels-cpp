@@ -28,13 +28,15 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 
 	// Generate the right hand side (orthogonal to freestream)
 	Vector2<S> pfs(freestream(1), -freestream(0));
-	VectorX<S> rhs(size);
+	VectorX<S> rhs(size + 1);
 	size_t i = 0;
 	for(const auto& vec : rhs_vectors.colwise())
 	{
 		rhs(i) = vec.dot(pfs);
 		i++;
 	}
+	// For the Kutta condition
+	rhs(size) = 0;
 
 
 	// TODO: This is not particularly efficient
@@ -45,14 +47,19 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 		(*out_rhs) = s.str();
 	}
 
-	out.vortex_strengths = dense_solver.solve(rhs);
+	ArrayX<S> vortex_strengths = dense_solver.solve(rhs).array();
+
+	S qinf2 = freestream.squaredNorm();
+	// Surface vorticity is equal to the surface velocity
+	out.cps = 1.0 - pow(vortex_strengths, 2) / qinf2;
+
 	out.freestream = freestream;
 
 	// TODO: This is not particularly efficient
 	if(out_sln)
 	{
 		std::stringstream s;
-		s << out.vortex_strengths;
+		s << vortex_strengths;
 		(*out_sln) = s.str();
 	}
 

@@ -2,13 +2,21 @@
 #include "../../Assert.h"
 
 template<typename S> requires std::is_floating_point_v<S>
+std::string Geometry<S>::get_sane_name() const
+{
+	std::string sane_name = name;
+	if(!sane_name.empty() && (sane_name[0] == 'T' || sane_name[0] == 'F'))
+		sane_name.insert(sane_name.begin(), '_');
+	return sane_name;
+}
+
+
+template<typename S> requires std::is_floating_point_v<S>
 template<int Decimals>
 std::string Geometry<S>::to_coordinate_data() const
 {
 	std::string out;
-	std::string sane_name = name;
-	if(!sane_name.empty() && (sane_name[0] == 'T' || sane_name[0] == 'F'))
-		sane_name.insert(sane_name.begin(), '_');
+	std::string sane_name = get_sane_name();
 
 	size_t file_size = 0;
 	// Name size + backspace
@@ -26,14 +34,10 @@ std::string Geometry<S>::to_coordinate_data() const
 
 	// The decimals, the number itself (maximum digits + sign) and the dot
 	// Note that the string is NOT null terminated
-	std::array<char, Decimals + 5> worker_array;
-	bool first = true;
+	std::array<char, Decimals + MAX_AIRFOIL_OUTPUT_DIGITS> worker_array;
 	for(auto vec : points.colwise())
 	{
-		if(first)
-			first = false;
-		else
-			out += '\n';
+		out += '\n';
 
 		if(vec(0) >= MAX_AIRFOIL_OUTPUT_COORD)
 			throw std::runtime_error("Airfoil x coordinate too big!");
