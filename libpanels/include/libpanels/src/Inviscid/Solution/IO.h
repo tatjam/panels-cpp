@@ -58,6 +58,7 @@ std::string InviscidSolution<S>::write_cp() const
 		}
 
 		fout.append(out.begin(), out.end());
+		fout += '\n';
 	}
 
 	return fout;

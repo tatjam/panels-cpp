@@ -9,8 +9,14 @@ int main()
 	using namespace libpanels;
 
 	auto geom = Geometry<double>::from_data(read_file_to_string("naca0012"));
+	auto geom2 = Geometry<double>::from_data(read_file_to_string("naca0012"));
+	geom2.points.row(0) += 4.0;
+	geom2.points.row(1) += 2.0;
 	auto solver = BuildSolver<libpanels::InviscidSolver<double>>()
 			.begin_geometry(geom)
+				.set_distance_to_close_trailing_edge(0.5)
+				.finish_geometry()
+			.begin_geometry(geom2)
 				.set_distance_to_close_trailing_edge(0.5)
 				.finish_geometry()
 			.begin_parameters()

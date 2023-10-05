@@ -14,6 +14,7 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 	// Copy the geometries to the solution
 	out.geoms = geoms;
 	size_t size = get_total_panels();
+	size_t ngeom = geoms.size();
 
 	if(state == NOT_COMPUTED)
 	{
@@ -28,8 +29,8 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 			mat = {};
 
 			// Solve it for alpha = 0 and alpha = 90 (velocity 1 for simplicity)
-			VectorX<S> rhs0(size + 1);
-			VectorX<S> rhs90(size + 1);
+			VectorX<S> rhs0(size + ngeom);
+			VectorX<S> rhs90(size + ngeom);
 
 			size_t i = 0;
 			for(const auto& vec : rhs_vectors.colwise())

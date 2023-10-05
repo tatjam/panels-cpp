@@ -50,7 +50,7 @@ namespace libpanels
 		// If using solve(), these store the solutions for alpha = 0 and alpha=90
 		VectorX<S> alpha0, alpha90;
 
-		size_t get_total_panels();
+		Index get_total_panels();
 		// Also builds the right hand vectors (panel normals)
 		void build_matrix();
 		// Sets use_sparse and smat (if sparse solver is to be used)

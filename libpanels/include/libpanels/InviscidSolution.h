@@ -18,6 +18,7 @@ namespace libpanels
 
 			// Contains the indices in the solution array of cps
 			ArrayXi extract;
+
 		};
 	}
 
