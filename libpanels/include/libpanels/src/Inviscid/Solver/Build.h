@@ -223,7 +223,7 @@ void InviscidSolver<S>::build_matrix()
 		rhs_vectors(1, i) = 0;
 		i++;
 	}
-
+	std::cout << rhs_vectors << std::endl;
 }
 
 

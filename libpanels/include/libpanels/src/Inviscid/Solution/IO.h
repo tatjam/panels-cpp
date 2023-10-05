@@ -29,30 +29,37 @@ std::string InviscidSolution<S>::write_cp() const
 
 		out.reserve(file_size);
 
+		bool put_newline = false;
 		if(!sane_name.empty())
+		{
 			out.append(sane_name.begin(), sane_name.end());
+			put_newline = true;
+		}
 
 
 		std::array<char, Decimals + Geometry<S>::MAX_AIRFOIL_OUTPUT_DIGITS> worker_array;
 		auto geom_cps = cps(sgeom.extract);
 
-
 		for(size_t i = 0; i < geom_cps.rows(); i++)
 		{
-			out += '\n';
+			if(put_newline)
+				out += '\n';
+			else
+				put_newline = true;
 
-			/*if(geom.points(0, i) >= Geometry<S>::MAX_AIRFOIL_OUTPUT_COORD)
+			if(geom.points(0, i) >= Geometry<S>::MAX_AIRFOIL_OUTPUT_COORD)
 				throw std::runtime_error("Airfoil x coordinate too big!");
 			// TODO: We use the same 5 digits, could be a separate value
 			if(cps(i) >= Geometry<S>::MAX_AIRFOIL_OUTPUT_COORD)
-				throw std::runtime_error("Airfoil cp value too big!");*/
+				throw std::runtime_error("Airfoil cp value too big!");
 
 			size_t len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(),
 												geom.points(0, i),
 												std::chars_format::fixed, Decimals).ptr - &worker_array[0]);
 			out.append(worker_array.begin(), worker_array.begin() + len);
 			out += ' ';
-			len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(), geom_cps(i),
+			len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(),
+										 geom_cps(i),
 										 std::chars_format::fixed, Decimals).ptr - &worker_array[0]);
 			out.append(worker_array.begin(), worker_array.begin() + len);
 		}

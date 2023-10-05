@@ -65,11 +65,19 @@ Geometry<S> Geometry<S>::from_data(const std::string &data)
 
 	if(data.size() == 0) throw std::runtime_error("Data was empty");
 
-	if(!std::isdigit(data[0]))
 	{
 		std::string name_line;
-		std::getline(ss, name_line);
-		out.name = name_line;
+		std::getline(ss >> std::ws, name_line);
+		std::stringstream name_line_ss(name_line);
+		S dummy;
+		if(name_line_ss >> dummy)
+		{
+			ss.seekg(0);
+		}
+		else
+		{
+			out.name = name_line;
+		}
 	}
 
 	std::string line;
