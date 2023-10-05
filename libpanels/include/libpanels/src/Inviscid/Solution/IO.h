@@ -34,7 +34,10 @@ std::string InviscidSolution<S>::write_cp() const
 
 
 		std::array<char, Decimals + Geometry<S>::MAX_AIRFOIL_OUTPUT_DIGITS> worker_array;
-		for(size_t i = 0; i < geom.points.cols(); i++)
+		auto geom_cps = cps(sgeom.extract);
+
+
+		for(size_t i = 0; i < geom_cps.rows(); i++)
 		{
 			out += '\n';
 
@@ -49,7 +52,7 @@ std::string InviscidSolution<S>::write_cp() const
 												std::chars_format::fixed, Decimals).ptr - &worker_array[0]);
 			out.append(worker_array.begin(), worker_array.begin() + len);
 			out += ' ';
-			len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(), cps(i),
+			len = (size_t)(std::to_chars(worker_array.data(), worker_array.data() + worker_array.size(), geom_cps(i),
 										 std::chars_format::fixed, Decimals).ptr - &worker_array[0]);
 			out.append(worker_array.begin(), worker_array.begin() + len);
 		}

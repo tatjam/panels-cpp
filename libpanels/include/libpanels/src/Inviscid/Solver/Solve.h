@@ -13,8 +13,8 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 
 	// Copy the geometries to the solution
 	out.geoms = geoms;
-
 	size_t size = get_total_panels();
+
 	if(state == NOT_COMPUTED)
 	{
 		if(use_sparse)
@@ -30,6 +30,7 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 			// Solve it for alpha = 0 and alpha = 90 (velocity 1 for simplicity)
 			VectorX<S> rhs0(size + 1);
 			VectorX<S> rhs90(size + 1);
+
 			size_t i = 0;
 			for(const auto& vec : rhs_vectors.colwise())
 			{
@@ -37,10 +38,6 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 				rhs90(i) = vec(0);
 				i++;
 			}
-
-			// Kutta condition
-			rhs0(size) = 0;
-			rhs90(size) = 0;
 
 			alpha0 = dense_solver.solve(rhs0);
 			alpha90 = dense_solver.solve(rhs90);
@@ -57,7 +54,7 @@ InviscidSolution<S> InviscidSolver<S>::solve(Vector2<S> freestream, std::string*
 	ArrayX<S> sln = alpha0 * std::cos(alpha) + alpha90 * std::sin(alpha);
 
 	// Because they were calculated with velocity 1, the qinf term disappears
-	out.cps = 1.0 - pow(sln, 2);
+	out.cps = S(1.0) - pow(sln, 2);
 	out.freestream = freestream;
 
 	// TODO: This is not particularly efficient
@@ -109,9 +106,6 @@ InviscidSolution<S> InviscidSolver<S>::solve_direct(Vector2<S> freestream, std::
 		rhs(i) = vec.dot(pfs);
 		i++;
 	}
-	// For the Kutta condition
-	rhs(size) = 0;
-
 
 	// TODO: This is not particularly efficient
 	if(out_rhs)

@@ -81,14 +81,15 @@ size_t InviscidSolver<S>::get_total_panels()
 	return tot;
 }
 
-// TODO: Check that the gpi, gpj stuff is correct
 template<typename S>
 void InviscidSolver<S>::build_matrix()
 {
 	size_t size = get_total_panels();
-	// The extra row is the kutta condition, the extra column the stremfunction
-	mat = MatrixX<S>::Zero(size + 1, size + 1);
-	rhs_vectors = Matrix<S, 2, Dynamic>(2, size);
+	size_t ngeom = geoms.size();
+	// The extra rows are the kutta conditions for each geometry, the extra columns the stremfunctions
+	mat = MatrixX<S>::Zero(size + ngeom, size + ngeom);
+	// Extra rows are the kutta conditions
+	rhs_vectors = Matrix<S, 2, Dynamic>(2, size + ngeom);
 
 	size_t gpi = 0, gpj = 0;
 
@@ -130,10 +131,11 @@ void InviscidSolver<S>::build_matrix()
 		{
 			for(const auto& gj : geoms)
 			{
+				size_t cols = gj.geom.points.cols();
 				Vector2<S> in = gi.geom.points.col(i);
-				Vector2<S> j0 = gj.geom.points.col(gj.geom.points.cols() - 1);
+				Vector2<S> j0 = gj.geom.points.col(cols - 1);
 				Vector2<S> j1 = gj.geom.points.col(0);
-				auto infl = internal::inviscid_influence<S, true>(in, j0, j1, i, gj.geom.points.cols() - 1, 0).first;
+				auto infl = internal::inviscid_influence<S, true>(in, j0, j1, i, cols - 1, 0).first;
 
 				Vector2<S> tvec = (j1 - j0).normalized();
 				Vector2<S> svec;
@@ -144,8 +146,10 @@ void InviscidSolver<S>::build_matrix()
 				else
 				{
 					// Calculate it with the trailing panels bisector
-					//Vector2<S> svec =
-
+					Vector2<S> top = (gj.geom.points.col(0) - gj.geom.points.col(1));
+					Vector2<S> bottom = (gj.geom.points.col(cols - 1) - gj.geom.points.col(cols - 2));
+					// By the parallelogram addition rule, this is the bisector vector
+					svec = (top.normalized() + bottom.normalized()).normalized();
 				}
 
 				S cross = std::abs(svec(0) * tvec(1) - svec(1) * tvec(0));
@@ -161,10 +165,23 @@ void InviscidSolver<S>::build_matrix()
 		gpi += gi.geom.points.cols();
 	}
 
-	// Introduce the streamfunction
-	for(size_t i = 0; i < size; i++)
+	// Introduce the closed trailing edge for closed geometries
+	gpi = 0;
+	for(const auto& gi : geoms)
 	{
-		mat(i, size) = -1;
+
+		gpi += gi.geom.points.cols();
+	}
+
+	gpi = 0;
+	// Introduce the streamfunction for each geometry
+	for(const auto& gi : geoms)
+	{
+		for (size_t i = 0; i < size; i++)
+		{
+			mat(gpi + i, gi.geom.points.cols()) = -1;
+		}
+		gpi += gi.geom.points.cols();
 	}
 
 	// Finally, introduce the Kutta condition for each geometry
@@ -177,7 +194,8 @@ void InviscidSolver<S>::build_matrix()
 	}
 
 	// Build the rhs_vectors (node positions simply, laid out in the same way as gpi)
-	rhs_vectors = Matrix<S, 2, Dynamic>(2, size);
+	// Also include the Kutta condition null value
+	rhs_vectors = Matrix<S, 2, Dynamic>(2, size + geoms.size());
 	size_t i = 0;
 	for(const auto& gi : geoms)
 	{
@@ -187,6 +205,10 @@ void InviscidSolver<S>::build_matrix()
 			rhs_vectors(1, i) = vec(1);
 			i++;
 		}
+		// Kutta condition
+		rhs_vectors(0, i) = 0;
+		rhs_vectors(1, i) = 0;
+		i++;
 	}
 
 }
@@ -210,6 +232,19 @@ InviscidSolver<S> InviscidSolver<S>::build() const
 	// We now work to generate the matrix in out
 	out.build_matrix();
 	out.maybe_make_sparse();
+
+	// Build extractor arrays for the geometries
+	size_t i = 0;
+	for(auto& geom : out.geoms)
+	{
+		geom.extract = ArrayXi(geom.geom.points.cols());
+		for(size_t j = 0; j < geom.geom.points.cols(); j++)
+		{
+			geom.extract(j) = i + j;
+		}
+
+		i += geom.geom.points.cols() + 1;
+	}
 
 	return out;
 }

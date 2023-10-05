@@ -41,6 +41,7 @@ namespace libpanels
 		FullPivLU<Matrix<S, Dynamic, Dynamic>> dense_solver;
 		Matrix<S, 2, Dynamic> rhs_vectors;
 
+
 		// Note that this matrix gets cleared once solve or solve_direct is first called!
 		MatrixX<S> mat;
 		// Same as before if using sparse solver

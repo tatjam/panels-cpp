@@ -1,6 +1,8 @@
 #pragma once
 #include <optional>
 
+#include <iostream>
+
 namespace libpanels
 {
 	namespace internal
@@ -14,6 +16,8 @@ namespace libpanels
 			// Set to infinity to always close the trailing edge
 			S distance_for_closed_trailing_edge;
 
+			// Contains the indices in the solution array of cps
+			ArrayXi extract;
 		};
 	}
 
@@ -27,17 +31,14 @@ namespace libpanels
 	private:
 		std::vector<internal::InviscidGeometry<S>> geoms;
 
-		/**
-		 * Pressure coefficient at each node, in the same order as they appeared in the geometries
-		 * used to generate the solution.
-		 */
+		// To extract data from here, use the index arrays on geoms
 		ArrayX<S> cps;
 		Vector2<S> freestream;
 	public:
 
 		/**
 		 * Outputs a file in a format very similar to Xfoil's CPWR
-		 * (Although it allows multiple geometries, which are written inline,
+		 * (Although it allows multiple geometries, which are separated by an empty line,
 		 * and doesn't have aligned numbers)
 		 * @return
 		 */
